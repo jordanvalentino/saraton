@@ -26,22 +26,47 @@
 					use Phpml\FeatureExtraction\TfIdfTransformer;
 					use Phpml\Classification\KNearestNeighbors;
 					use Phpml\Math\Distance\Euclidean;
+					use Abraham\TwitterOAuth\TwitterOAuth;
 
 
 					function tokenize($text = "")
 					{
 						$unigram = explode(" ", $text);
 						$bigram = array();
-						for($i = 0; $i < count($unigram)-1; $i++)
-						{
-							$bigram[$i] = $unigram[$i]." ".$unigram[$i+1];
-						}
+						// for($i = 0; $i < count($unigram)-1; $i++)
+						// {
+						// 	$bigram[$i] = $unigram[$i]." ".$unigram[$i+1];
+						// }
   						return array_merge($unigram, $bigram);
 					}
 					if(isset($_POST["new"])){
-						$conn = new mysqli("localhost", "root", "", "saraton");
-						$sql = "SELECT * FROM kamus";
-						$result = mysqli_query($conn, $sql);
+						define('CONSUMER_KEY', 'Za9qeMqH1CuQtvkCquULw82Z6');
+						define('CONSUMER_SECRET', 'RmL7pAk6oMYsQGWWre3k3OCqaFPGqYiIZcciQ30QHRwUuPMcHH');
+						define('ACCESS_TOKEN', '1131743842368049153-O7UY1AWpENl3OCCKAdLlTyuaDVOrjd');
+						define('ACCESS_TOKEN_SECRET', '0PIkOiEqLzNQHAYAdd8VKsZ8jU8fDPKCyQkSlTZWhqtQR');
+
+						$conndb = new mysqli("localhost", "root", "", "saraton");			
+						$conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET);
+						// $query = array(
+						//  "q" => $_POST["new"]." -filter:retweets",
+						//  "count" => 200,
+						//  "result_type" => "recent",
+						//  "tweet_mode"=>"extended"
+						// );
+						// $tweets = $conn->get('search/tweets', $query);
+
+						// foreach ($tweets->statuses as $tweet) {
+						// 	$newString = preg_replace('/[ ](?=[ ])|[^-_A-Za-z0-9 ]+/i', '', $tweet->full_text);
+						// 	$sql = "INSERT INTO kamus(tweet,kategori) VALUES('".$newString."','sara')";
+						// 	$result = mysqli_query($conndb, $sql);
+						// 	echo "bbb".$result."<br>";
+						// 	echo '<p>'.$tweet->full_text.'<br>Posted on: <a href="https://twitter.com/'.$tweet->user->screen_name.'/status/'.$tweet->id.'">'.date('Y-m-d H:i', strtotime($tweet->created_at)).'</a></p>';
+						// }
+
+
+
+						$sql = "SELECT tweet, kategori from kamus";
+						$result = mysqli_query($conndb, $sql);						
 						$sample_data = array();
 						$kategori = array();
 						if ($result) {
@@ -49,10 +74,10 @@
 							while($row=mysqli_fetch_array($result))
 							{
 								$kategori[$i] = $row["kategori"];
-								$sample_data[$i] = $row["kalimat"];
+								$sample_data[$i] = $row["tweet"];
 								$i++;
 							}		
-							$sample_data[$i] = $_POST["new"];          	
+							$sample_data[$i] = preg_replace('/[ ](?=[ ])|[^-_A-Za-z0-9 ]+/i', '', $_POST["new"]);	
 						} else {
 						   echo "Error: " . $sql . "" . mysqli_error($conn);
 						}
@@ -62,15 +87,12 @@
 						foreach ($sample_data as $key => $value) {
 							$temp = tokenize($value);
 							foreach ($temp as $key => $value) {
-								if(in_array($value, $vocabulary)){
-
-								}
-								else{
+								if(!in_array($value, $vocabulary)){
 									array_push($vocabulary, $value);
 								}
 							}
 						}
-
+						print_r($vocabulary);
 						foreach ($sample_data as $key1 => $value1) {
 							$temp = tokenize($value1);
 							$tempTraining = array();
@@ -86,17 +108,46 @@
 
 						print_r($vocabulary);
 						print_r($training_data);
+						// $tf = new TokenCountVectorizer(new WhitespaceTokenizer());
+						// $tf->fit($sample_data);
+						// $tf->transform($sample_data);
+						// $vocabulary = $tf->getVocabulary();
+
 						$tfidf = new TfIdfTransformer($training_data);
 						$tfidf->transform($training_data);
 						$i=0;
 
 
-						$data_baru = $_POST["new"];
-						$classifier = new KNearestNeighbors($k=11, new Euclidean());
-						array_pop($training_data);
-						$classifier->train($training_data, $kategori);
-						$hasil =$classifier->predict($data_baru);
-						echo "<b><u>Hasil Prediksi Kategori Berita Baru adalah ".$hasil."</u></b>";
+						$query = array(
+						 "q" => $_POST["new"]." -filter:retweets",
+						 "count" => 200,
+						 "result_type" => "recent",
+						 "tweet_mode"=>"extended"
+						);
+						$tweets = $conn->get('search/tweets', $query);
+						foreach ($tweets->statuses as $tweet) {
+							$newString = preg_replace('/[ ](?=[ ])|[^-_A-Za-z0-9 ]+/i', '', $tweet->full_text);
+							$classifier = new KNearestNeighbors($k=11, new Euclidean());
+							array_pop($training_data);
+							$classifier->train($training_data, $kategori);
+							$hasil =$classifier->predict($newString);
+							if($hasil == "sara"){
+			                    echo `<div>
+					                    <div id="warning`.$tweet->id.`" style="width:100%; position:fixed;">
+					                        <p>Kalimat ini mengandung SARA </p>
+					                        <button onclick="getElementbyId('warning`.$tweet->id.`').style.display='none'">Tampilkan</button>
+					                    </div>		
+			                    		<p>`.$tweet->full_text.`<br>Posted on: <a href="https://twitter.com/`.$tweet->user->screen_name.`/status/`.$tweet->id.`">`.date('Y-m-d H:i', strtotime($tweet->created_at)).`</a>
+			                    		</p>
+			                    	</div>`;								
+							}
+							else {
+								echo '<div>
+										<p>'.$tweet->full_text.'<br>Posted on: <a href="https://twitter.com/'.$tweet->user->screen_name.'/status/'.$tweet->id.'">'.date('Y-m-d H:i', strtotime($tweet->created_at)).'</a></p>
+									  </div>';
+							}
+
+						}
 					}
 
 					

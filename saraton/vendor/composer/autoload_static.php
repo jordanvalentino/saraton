@@ -11,6 +11,10 @@ class ComposerStaticInit3c8a283d43faa1f50c12a6c9a1594520
         array (
             'Phpml\\' => 6,
         ),
+        'A' => 
+        array (
+            'Abraham\\TwitterOAuth\\' => 21,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
@@ -18,15 +22,9 @@ class ComposerStaticInit3c8a283d43faa1f50c12a6c9a1594520
         array (
             0 => __DIR__ . '/..' . '/php-ai/php-ml/src',
         ),
-    );
-
-    public static $prefixesPsr0 = array (
-        'S' => 
+        'Abraham\\TwitterOAuth\\' => 
         array (
-            'Sastrawi\\' => 
-            array (
-                0 => __DIR__ . '/..' . '/sastrawi/sastrawi/src',
-            ),
+            0 => __DIR__ . '/..' . '/abraham/twitteroauth/src',
         ),
     );
 
@@ -35,7 +33,6 @@ class ComposerStaticInit3c8a283d43faa1f50c12a6c9a1594520
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit3c8a283d43faa1f50c12a6c9a1594520::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit3c8a283d43faa1f50c12a6c9a1594520::$prefixDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit3c8a283d43faa1f50c12a6c9a1594520::$prefixesPsr0;
 
         }, null, ClassLoader::class);
     }

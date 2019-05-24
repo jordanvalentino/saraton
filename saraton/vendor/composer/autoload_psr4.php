@@ -7,4 +7,5 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Phpml\\' => array($vendorDir . '/php-ai/php-ml/src'),
+    'Abraham\\TwitterOAuth\\' => array($vendorDir . '/abraham/twitteroauth/src'),
 );
