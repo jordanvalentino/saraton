@@ -44,7 +44,13 @@
 						define('CONSUMER_SECRET', 'RmL7pAk6oMYsQGWWre3k3OCqaFPGqYiIZcciQ30QHRwUuPMcHH');
 						define('ACCESS_TOKEN', '1131743842368049153-O7UY1AWpENl3OCCKAdLlTyuaDVOrjd');
 						define('ACCESS_TOKEN_SECRET', '0PIkOiEqLzNQHAYAdd8VKsZ8jU8fDPKCyQkSlTZWhqtQR');
+						echo ini_get('memory_limit');
 
+						if (ini_get('memory_limit')) {
+						    ini_set('memory_limit', '512M');
+						}
+
+						echo ini_get('memory_limit');
 						$conndb = new mysqli("localhost", "root", "", "saraton");			
 						$conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET);
 						// $query = array(
@@ -77,61 +83,69 @@
 								$sample_data[$i] = $row["tweet"];
 								$i++;
 							}		
-							$sample_data[$i] = preg_replace('/[ ](?=[ ])|[^-_A-Za-z0-9 ]+/i', '', $_POST["new"]);	
 						} else {
 						   echo "Error: " . $sql . "" . mysqli_error($conn);
 						}
 
-						$training_data = array();
-						$vocabulary = array();
-						foreach ($sample_data as $key => $value) {
-							$temp = tokenize($value);
-							foreach ($temp as $key => $value) {
-								if(!in_array($value, $vocabulary)){
-									array_push($vocabulary, $value);
-								}
-							}
-						}
-						print_r($vocabulary);
-						foreach ($sample_data as $key1 => $value1) {
-							$temp = tokenize($value1);
-							$tempTraining = array();
-							foreach ($vocabulary as $key2 => $value2) {
-								$count= 0;
-								foreach ($temp as $key3 => $value3) {
-									if($value2==$value3) $count++;
-								}
-								array_push($tempTraining, $count);
-							}
-							array_push($training_data, $tempTraining);
-						}
+						// $training_data = array();
+						// $vocabulary = array();
+						// foreach ($sample_data as $key => $value) {
+						// 	$temp = explode(" ", $value);
+						// 	foreach ($temp as $key1 => $value1) {
+						// 		if(!isset($vocabulary[$value1])){
+						// 			$vocabulary[$value1]=$value1;
+						// 		}
+						// 	}
+						// }
+						// $vocabulary = array_values($vocabulary);
+						// print_r($vocabulary);
+						// foreach ($sample_data as $key1 => $value1) {
+						// 	$temp = explode(" ", $value1);
+						// 	$tempTraining = array();
+						// 	foreach ($vocabulary as $key2 => $value2) {
+						// 		$count= 0;
+						// 		foreach ($temp as $key3 => $value3) {
+						// 			if($value2===$value3) $count++;
+						// 		}
+						// 		array_push($tempTraining, $count);
+						// 	}
+						// 	array_push($training_data, $tempTraining);
+						// }
 
-						print_r($vocabulary);
-						print_r($training_data);
-						// $tf = new TokenCountVectorizer(new WhitespaceTokenizer());
-						// $tf->fit($sample_data);
-						// $tf->transform($sample_data);
-						// $vocabulary = $tf->getVocabulary();
+						// echo "sini";
+						// print_r($training_data);
+						
+						$classifier = new KNearestNeighbors($k=11, new Euclidean());
 
-						$tfidf = new TfIdfTransformer($training_data);
-						$tfidf->transform($training_data);
-						$i=0;
-
-
+						
 						$query = array(
 						 "q" => $_POST["new"]." -filter:retweets",
-						 "count" => 200,
+						 "count" => 100,
 						 "result_type" => "recent",
 						 "tweet_mode"=>"extended"
 						);
 						$tweets = $conn->get('search/tweets', $query);
+
+						
 						foreach ($tweets->statuses as $tweet) {
+							$training_data = $sample_data;
 							$newString = preg_replace('/[ ](?=[ ])|[^-_A-Za-z0-9 ]+/i', '', $tweet->full_text);
-							$classifier = new KNearestNeighbors($k=11, new Euclidean());
-							array_pop($training_data);
+							array_push($training_data, $newString);
+							$tf = new TokenCountVectorizer(new WhitespaceTokenizer());
+							$tf->fit($training_data);
+							$tf->transform($training_data);
+
+							$tfidf = new TfIdfTransformer($training_data);
+							$tfidf->transform($training_data);
+							$newString = array_pop($training_data);
 							$classifier->train($training_data, $kategori);
+
+
+							//berat disini
+							//cuman predict nya butuh angka hasil tfidf yang berarti harus ngitung tfidf setiap tweet
+							//512 MB = 1 kali predict
 							$hasil =$classifier->predict($newString);
-							if($hasil == "sara"){
+							if($hasil === "sara"){
 			                    echo `<div>
 					                    <div id="warning`.$tweet->id.`" style="width:100%; position:fixed;">
 					                        <p>Kalimat ini mengandung SARA </p>
