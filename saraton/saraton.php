@@ -40,13 +40,15 @@
   						return array_merge($unigram, $bigram);
 					}
 					if(isset($_POST["new"])){
-						echo ini_get('memory_limit');
+						define('CONSUMER_KEY', 'Za9qeMqH1CuQtvkCquULw82Z6');
+						define('CONSUMER_SECRET', 'RmL7pAk6oMYsQGWWre3k3OCqaFPGqYiIZcciQ30QHRwUuPMcHH');
+						define('ACCESS_TOKEN', '1131743842368049153-O7UY1AWpENl3OCCKAdLlTyuaDVOrjd');
+						define('ACCESS_TOKEN_SECRET', '0PIkOiEqLzNQHAYAdd8VKsZ8jU8fDPKCyQkSlTZWhqtQR');
 
 						if (ini_get('memory_limit')) {
 						    ini_set('memory_limit', '512M');
 						}
 
-						echo ini_get('memory_limit');
 						$conndb = new mysqli("localhost", "root", "", "saraton");			
 						$conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET);
 						// $query = array(
@@ -58,10 +60,16 @@
 						// $tweets = $conn->get('search/tweets', $query);
 
 						// foreach ($tweets->statuses as $tweet) {
-						// 	$newString = preg_replace('/[ ](?=[ ])|[^-_A-Za-z0-9 ]+/i', '', $tweet->full_text);
+						// 	$newString = preg_replace('/[ ](?=[ ])|[^@A-Za-z0-9 ]+/i', '', $tweet->full_text);
+						// 	$temp=explode(" ", $newString);
+						// 	$newString ="";
+						// 	foreach ($temp as $key => $value) {
+						// 		if(substr($value, 0,1) != "@"){
+						// 			$newString .= $value." ";	
+						// 		} 
+						// 	}
 						// 	$sql = "INSERT INTO kamus(tweet,kategori) VALUES('".$newString."','sara')";
 						// 	$result = mysqli_query($conndb, $sql);
-						// 	echo "bbb".$result."<br>";
 						// 	echo '<p>'.$tweet->full_text.'<br>Posted on: <a href="https://twitter.com/'.$tweet->user->screen_name.'/status/'.$tweet->id.'">'.date('Y-m-d H:i', strtotime($tweet->created_at)).'</a></p>';
 						// }
 
@@ -82,6 +90,7 @@
 						} else {
 						   echo "Error: " . $sql . "" . mysqli_error($conn);
 						}
+
 
 						// $training_data = array();
 						// $vocabulary = array();
@@ -108,11 +117,8 @@
 						// 	array_push($training_data, $tempTraining);
 						// }
 
-						// echo "sini";
-						// print_r($training_data);
 						
 						$classifier = new KNearestNeighbors($k=11, new Euclidean());
-
 						
 						$query = array(
 						 "q" => $_POST["new"]." -filter:retweets",
@@ -121,11 +127,10 @@
 						 "tweet_mode"=>"extended"
 						);
 						$tweets = $conn->get('search/tweets', $query);
-
 						
 						foreach ($tweets->statuses as $tweet) {
 							$training_data = $sample_data;
-							$newString = preg_replace('/[ ](?=[ ])|[^-_A-Za-z0-9 ]+/i', '', $tweet->full_text);
+							$newString = preg_replace('/[ ](?=[ ])|[^A-Za-z0-9 ]+/i', '', $tweet->full_text);
 							array_push($training_data, $newString);
 							$tf = new TokenCountVectorizer(new WhitespaceTokenizer());
 							$tf->fit($training_data);
@@ -137,9 +142,9 @@
 							$classifier->train($training_data, $kategori);
 
 
-							//berat disini
-							//cuman predict nya butuh angka hasil tfidf yang berarti harus ngitung tfidf setiap tweet
-							//512 MB = 1 kali predict
+							// berat disini
+							// cuman predict nya butuh angka hasil tfidf yang berarti harus ngitung tfidf setiap tweet
+							// 512 MB = 1 kali predict
 							$hasil =$classifier->predict($newString);
 							if($hasil === "sara"){
 			                    echo `<div>
