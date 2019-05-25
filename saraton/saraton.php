@@ -40,10 +40,6 @@
   						return array_merge($unigram, $bigram);
 					}
 					if(isset($_POST["new"])){
-						define('CONSUMER_KEY', 'Za9qeMqH1CuQtvkCquULw82Z6');
-						define('CONSUMER_SECRET', 'RmL7pAk6oMYsQGWWre3k3OCqaFPGqYiIZcciQ30QHRwUuPMcHH');
-						define('ACCESS_TOKEN', '1131743842368049153-O7UY1AWpENl3OCCKAdLlTyuaDVOrjd');
-						define('ACCESS_TOKEN_SECRET', '0PIkOiEqLzNQHAYAdd8VKsZ8jU8fDPKCyQkSlTZWhqtQR');
 						echo ini_get('memory_limit');
 
 						if (ini_get('memory_limit')) {
