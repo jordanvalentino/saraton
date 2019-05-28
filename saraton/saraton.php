@@ -40,10 +40,6 @@
   						return array_merge($unigram, $bigram);
 					}
 					if(isset($_POST["new"])){
-						define('CONSUMER_KEY', 'Za9qeMqH1CuQtvkCquULw82Z6');
-						define('CONSUMER_SECRET', 'RmL7pAk6oMYsQGWWre3k3OCqaFPGqYiIZcciQ30QHRwUuPMcHH');
-						define('ACCESS_TOKEN', '1131743842368049153-O7UY1AWpENl3OCCKAdLlTyuaDVOrjd');
-						define('ACCESS_TOKEN_SECRET', '0PIkOiEqLzNQHAYAdd8VKsZ8jU8fDPKCyQkSlTZWhqtQR');
 
 						if (ini_get('memory_limit')) {
 						    ini_set('memory_limit', '512M');
@@ -64,7 +60,7 @@
 						// 	$temp=explode(" ", $newString);
 						// 	$newString ="";
 						// 	foreach ($temp as $key => $value) {
-						// 		if(substr($value, 0,1) != "@"){
+						// 		if(substr($value, 0,1) != "@" or substr($value, 0, 4) !="http"){
 						// 			$newString .= $value." ";	
 						// 		} 
 						// 	}
@@ -92,7 +88,7 @@
 						}
 
 
-						// $training_data = array();
+						// $sample_data = array();
 						// $vocabulary = array();
 						// foreach ($sample_data as $key => $value) {
 						// 	$temp = explode(" ", $value);
@@ -114,7 +110,7 @@
 						// 		}
 						// 		array_push($tempTraining, $count);
 						// 	}
-						// 	array_push($training_data, $tempTraining);
+						// 	array_push($sample_data, $tempTraining);
 						// }
 
 						
@@ -126,43 +122,57 @@
 						 "result_type" => "recent",
 						 "tweet_mode"=>"extended"
 						);
-						$tweets = $conn->get('search/tweets', $query);
 						
+						$tweets = $conn->get('search/tweets', $query);
+						$tweet_data = array();
+						$i=0;
 						foreach ($tweets->statuses as $tweet) {
-							$training_data = $sample_data;
-							$newString = preg_replace('/[ ](?=[ ])|[^A-Za-z0-9 ]+/i', '', $tweet->full_text);
-							array_push($training_data, $newString);
-							$tf = new TokenCountVectorizer(new WhitespaceTokenizer());
-							$tf->fit($training_data);
-							$tf->transform($training_data);
+							$newString = preg_replace('/[^A-Za-z0-9 ]+/i', '', $tweet->full_text);
+							array_push($sample_data, $newString);	
+							$tweet_data[$i]["tweet"] = $tweet;	
+							$i++;
+						}
 
-							$tfidf = new TfIdfTransformer($training_data);
-							$tfidf->transform($training_data);
-							$newString = array_pop($training_data);
-							$classifier->train($training_data, $kategori);
+						$tf = new TokenCountVectorizer(new WhitespaceTokenizer());
+						$tf->fit($sample_data);
+						$tf->transform($sample_data);
+
+						$tfidf = new TfIdfTransformer($sample_data);
+						$tfidf->transform($sample_data);
+
+						for ($i=count($tweet_data)-1; $i >= 0; $i--) { 
+							$tweet_data[$i]["tfidf"] = array_pop($sample_data);
+						}
 
 
-							// berat disini
-							// cuman predict nya butuh angka hasil tfidf yang berarti harus ngitung tfidf setiap tweet
-							// 512 MB = 1 kali predict
-							$hasil =$classifier->predict($newString);
+						$classifier->train($sample_data, $kategori);
+
+						for ($x=0; $x < count($tweet_data); $x++) {
+							$tweet = $tweet_data[$x]["tweet"];
+							$hasil =$classifier->predict($tweet_data[$x]["tfidf"]);
 							if($hasil === "sara"){
-			                    echo `<div>
-					                    <div id="warning`.$tweet->id.`" style="width:100%; position:fixed;">
+			                    echo '<div>
+					                    <div id="warning'.$tweet->id.'" style="width:100%; position:fixed; background-color:red;">
 					                        <p>Kalimat ini mengandung SARA </p>
-					                        <button onclick="getElementbyId('warning`.$tweet->id.`').style.display='none'">Tampilkan</button>
+					                        <button onclick="myFunction('.$tweet->id.')">Tampilkan</button>
 					                    </div>		
-			                    		<p>`.$tweet->full_text.`<br>Posted on: <a href="https://twitter.com/`.$tweet->user->screen_name.`/status/`.$tweet->id.`">`.date('Y-m-d H:i', strtotime($tweet->created_at)).`</a>
+			                    		<p>'.$tweet->full_text.'<br>Posted on: <a href="https://twitter.com/'.$tweet->user->screen_name.'/status/'.$tweet->id.'">'.date(`Y-m-d H:i`, strtotime($tweet->created_at)).'</a>
 			                    		</p>
-			                    	</div>`;								
+			                    	</div>';								
 							}
 							else {
 								echo '<div>
 										<p>'.$tweet->full_text.'<br>Posted on: <a href="https://twitter.com/'.$tweet->user->screen_name.'/status/'.$tweet->id.'">'.date('Y-m-d H:i', strtotime($tweet->created_at)).'</a></p>
 									  </div>';
 							}
-
 						}
+						echo '<script>
+								function myFunction(idDiv) {
+								  var x = document.getElementById(idDiv);
+								  x.style.display = "none";
+								}
+								</script>';
+						
 					}
 
 					
