@@ -40,9 +40,16 @@
   						return array_merge($unigram, $bigram);
 					}
 					if(isset($_POST["new"])){
+						define('CONSUMER_KEY', 'Za9qeMqH1CuQtvkCquULw82Z6');
+						define('CONSUMER_SECRET', 'RmL7pAk6oMYsQGWWre3k3OCqaFPGqYiIZcciQ30QHRwUuPMcHH');
+						define('ACCESS_TOKEN', '1131743842368049153-O7UY1AWpENl3OCCKAdLlTyuaDVOrjd');
+						define('ACCESS_TOKEN_SECRET', '0PIkOiEqLzNQHAYAdd8VKsZ8jU8fDPKCyQkSlTZWhqtQR');
 
 						if (ini_get('memory_limit')) {
 						    ini_set('memory_limit', '512M');
+						}
+						if (ini_get('max_execution_time')) {
+						    ini_set('max_execution_time', '300');
 						}
 
 						$conndb = new mysqli("localhost", "root", "", "saraton");			
@@ -60,7 +67,7 @@
 						// 	$temp=explode(" ", $newString);
 						// 	$newString ="";
 						// 	foreach ($temp as $key => $value) {
-						// 		if(substr($value, 0,1) != "@" or substr($value, 0, 4) !="http"){
+						// 		if(substr($value, 0,1) != "@" && substr($value, 0, 4) !="http"){
 						// 			$newString .= $value." ";	
 						// 		} 
 						// 	}
@@ -86,7 +93,6 @@
 						} else {
 						   echo "Error: " . $sql . "" . mysqli_error($conn);
 						}
-
 
 						// $sample_data = array();
 						// $vocabulary = array();
@@ -114,7 +120,7 @@
 						// }
 
 						
-						$classifier = new KNearestNeighbors($k=11, new Euclidean());
+						
 						
 						$query = array(
 						 "q" => $_POST["new"]." -filter:retweets",
@@ -127,8 +133,15 @@
 						$tweet_data = array();
 						$i=0;
 						foreach ($tweets->statuses as $tweet) {
-							$newString = preg_replace('/[^A-Za-z0-9 ]+/i', '', $tweet->full_text);
-							array_push($sample_data, $newString);	
+							$temp = preg_replace('/[^@A-Za-z0-9 ]+/i', '', $tweet->full_text);
+							$temp = explode(" ", $temp);
+							$newString = "";
+							foreach ($temp as $key => $value) {
+								if(substr($value, 0,1) != "@" && substr($value, 0,4) != "http"){
+									$newString .= $value." ";
+								}
+							}
+							array_push($sample_data, strtolower($newString));	
 							$tweet_data[$i]["tweet"] = $tweet;	
 							$i++;
 						}
@@ -144,34 +157,39 @@
 							$tweet_data[$i]["tfidf"] = array_pop($sample_data);
 						}
 
-
+						$classifier = new KNearestNeighbors($k=11, new Euclidean());
 						$classifier->train($sample_data, $kategori);
 
+						echo '<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+								<script>
+								function myFunction(idDiv) {
+									var tes = idDiv;
+									console.log(tes);
+									document.getElementById(tes).style.display = "none";
+
+								}
+								</script>';	
 						for ($x=0; $x < count($tweet_data); $x++) {
 							$tweet = $tweet_data[$x]["tweet"];
 							$hasil =$classifier->predict($tweet_data[$x]["tfidf"]);
 							if($hasil === "sara"){
 			                    echo '<div>
-					                    <div id="warning'.$tweet->id.'" style="width:100%; position:fixed; background-color:red;">
-					                        <p>Kalimat ini mengandung SARA </p>
-					                        <button onclick="myFunction('.$tweet->id.')">Tampilkan</button>
+					                    <div id="warning'.$tweet->id.'" style="width:100%; position:absolute; background-color:red;">
+					                        <p>Kalimat ini mengandung SARA </p>'.$x.'
+					                        <button onclick="myFunction(`warning'.$tweet->id.'`)">Tampilkan</button>
 					                    </div>		
-			                    		<p>'.$tweet->full_text.'<br>Posted on: <a href="https://twitter.com/'.$tweet->user->screen_name.'/status/'.$tweet->id.'">'.date(`Y-m-d H:i`, strtotime($tweet->created_at)).'</a>
+			                    		<p>'.$tweet->full_text.'<br>Posted on: <a href="https://twitter.com/'.$tweet->user->screen_name.'/status/'.$tweet->id.'">'.date(`Y-m-d H:i`, strtotime($tweet->created_at)).$hasil.'</a>
 			                    		</p>
+			                    		<br>
 			                    	</div>';								
 							}
 							else {
 								echo '<div>
-										<p>'.$tweet->full_text.'<br>Posted on: <a href="https://twitter.com/'.$tweet->user->screen_name.'/status/'.$tweet->id.'">'.date('Y-m-d H:i', strtotime($tweet->created_at)).'</a></p>
+										<p>'.$tweet->full_text.'<br>Posted on: <a href="https://twitter.com/'.$tweet->user->screen_name.'/status/'.$tweet->id.'">'.date('Y-m-d H:i', strtotime($tweet->created_at)).$hasil.'</a></p>
 									  </div>';
 							}
 						}
-						echo '<script>
-								function myFunction(idDiv) {
-								  var x = document.getElementById(idDiv);
-								  x.style.display = "none";
-								}
-								</script>';
+
 						
 					}
 
