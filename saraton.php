@@ -62,7 +62,7 @@ $conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOK
 					}
 
 					if(isset($_POST["new"])){
-
+						//#SEARCH TWITTER
 						$query = array(
 						 "q" => $_POST["new"]." -filter:retweets",
 						 "count" => 100,
@@ -73,20 +73,19 @@ $conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOK
 						$tweets = $conn->get('search/tweets', $query);
 
 						foreach ($tweets->statuses as $tweet) {
-							$newString = preg_replace('/[ ](?=[ ])|[^@A-Za-z0-9 ]+/i', '', $tweet->full_text);
+							$text = preg_replace("/\r|\n/", " ", $tweet->full_text);
+							$newString = preg_replace('/[ ](?=[ ])|[^@#A-Za-z0-9 ]+/i', '', $text);
 							$temp=explode(" ", $newString);
 							$newString ="";
 							foreach ($temp as $key => $value) {
-								if(substr($value, 0,1) != "@" && substr($value, 0, 4) !="http"){
+								if(substr($value, 0,1) != "@" && substr($value, 0,1) != "#" && substr($value, 0, 4) !="http"){
 									$newString .= $value." ";	
 								} 
 							}
 							$sql = $conndb->query("SELECT tweet FROM kamus WHERE tweet='".strtolower($newString)."'");
 							if($sql->num_rows == 0) {
-								$sql = $conndb->query("INSERT INTO kamus(tweet,kategori) VALUES('".strtolower($newString)."','sara')");	
+								// $sql = $conndb->query("INSERT INTO kamus(tweet,kategori) VALUES('".strtolower($newString)."','sara')");	
 							}
-							// $sql = "INSERT INTO kamus(tweet,kategori) VALUES('".strtolower($newString)."','sara')";
-							// $result = mysqli_query($conndb, $sql);
 							echo '<p>'.$tweet->full_text.'<br>Posted on: <a href="https://twitter.com/'.$tweet->user->screen_name.'/status/'.$tweet->id.'">'.date('Y-m-d H:i', strtotime($tweet->created_at)).'</a></p>';
 						}
 
