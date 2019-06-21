@@ -151,16 +151,18 @@ $conn = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOK
 						// foreach ($tweets->statuses as $tweet)
 						// {
 						// 	# REMOVING SPECIAL CHARACTERS
-						// 	$temp = preg_replace('/[^@A-Za-z0-9 ]+/i', '', $tweet->full_text);
-						// 	$temp = explode(" ", $temp);
+							// $text = preg_replace("/\r|\n/", " ", $tweet->full_text);
+							// $temp = preg_replace('/[^@#A-Za-z0-9 ]+/i', '', $text);
+							// $temp = explode(" ", $temp);
 
 						// 	# REMOVING MENTIONS AND LINKS
 						// 	$newString = "";
-						// 	foreach ($temp as $key => $value)
-						// 	{
-						// 		if(substr($value, 0,1) != "@" && substr($value, 0,4) != "http") 
-						// 			$newString .= $value." ";
-						// 	}
+							// foreach ($temp as $key => $value)
+							// {
+							// 	if(substr($value, 0,1) != "@" && substr($value, 0,1) != "#" && substr($value, 0, 4) !="http"){
+							// 		$newString .= $value." ";	
+							// 	} 
+							// }
 
 						// 	$train_data = $sample_data;
 
