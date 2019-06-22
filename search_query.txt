@@ -1,19 +1,39 @@
 SARA search query :
 
-kristen kafir (38)
-cina bangsat (58)
-islam bangsat (67)
-cina asu (5)
-islam teroris (75)
-islam jihad (75)
-islam kafir (88)
-agama sesat (77)
-kristen bangsat (5)
-kristen sesat (14)
-nasrani sesat (9)
-china bangsat (30)
-suku komunis (12)
-cina komunis (66)
+1. kristen kafir (38)
+2. cina bangsat (58)
+3. islam bangsat (67)
+4. cina asu (5)
+5. islam teroris (75)
+6. islam jihad (75)
+7. islam kafir (88)
+8. agama sesat (77)
+9. kristen bangsat (5)
+10. kristen sesat (14)
+11. nasrani sesat (9)
+12. china bangsat (30)
+13. suku komunis (12)
+14. cina komunis (66)
 
-bruto: 619
-nett0: ???
+bruto sara_search: 619
+
+netto sara: 254 + 178 = 432
+netto non: 17 + 59 = 76
+
+
+
+NON SARA search query :
+
+15. kristen katolik islam (55)
+16. persatuan perpecahan (49)
+17. suku saudara (29)
+18. suku agama ras (85)
+19. keberagaman toleransi (28)
+20. bhineka tunggal ika (86)
+21. indomie (90)
+22. puasa (99)
+
+
+TOTAL netto :
+sara : 450
+non sara : 558
